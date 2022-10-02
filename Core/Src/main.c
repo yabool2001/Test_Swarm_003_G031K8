@@ -264,7 +264,7 @@ static void MX_TIM14_Init(void)
   htim14.Instance = TIM14;
   htim14.Init.Prescaler = 16000-1;
   htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim14.Init.Period = 2000-1;
+  htim14.Init.Period = 3000-1;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
@@ -418,14 +418,24 @@ void send_at_command_2_swarm ( const char* at_command , const char* answer , uin
 	sprintf ( swarm_uart_tx_buff , "%s*%02x\n" , at_command , cs ) ;
 	tim14_on = 1 ;
 	//clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
+	swarm_uart_rx_buff[0] = 0 ;
 	HAL_TIM_Base_Start_IT ( &htim14 ) ;
 	HAL_UART_Transmit ( SWARM_UART_HANDLER , (uint8_t*) swarm_uart_tx_buff ,  strlen ( (char*) swarm_uart_tx_buff ) , SWARM_UART_UART_TX_TIMEOUT ) ;
 	while ( tim14_on )
-		if ( strncmp ( (char*) swarm_uart_rx_buff , answer , strlen ( answer ) ) == 0 )
+	{
+		if ( swarm_uart_rx_buff[0] != 0 )
 		{
-			swarm_checklist = step ;
-			break ;
+			if ( strncmp ( (char*) swarm_uart_rx_buff , answer , strlen ( answer ) ) == 0 )
+			{
+				swarm_checklist = step ;
+				break ;
+			}
+			else
+			{
+				//clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
+			}
 		}
+	}
 	clean_array ( swarm_uart_tx_buff , SWARM_UART_TX_MAX_BUFF_SIZE ) ;
 }
 
