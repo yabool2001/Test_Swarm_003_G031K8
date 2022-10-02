@@ -7,8 +7,8 @@
 ../Core/Src/main.c:350:13:MX_GPIO_Init	48	static
 ../Core/Src/main.c:378:6:m138_init	16	static
 ../Core/Src/main.c:415:6:send_at_command_2_swarm	40	static
-../Core/Src/main.c:443:6:clean_array	24	static
-../Core/Src/main.c:450:9:nmea_checksum	24	static
-../Core/Src/main.c:461:6:HAL_UARTEx_RxEventCallback	24	static
-../Core/Src/main.c:472:6:HAL_TIM_PeriodElapsedCallback	16	static
-../Core/Src/main.c:486:6:Error_Handler	8	static,ignoring_inline_asm
+../Core/Src/main.c:444:6:clean_array	24	static
+../Core/Src/main.c:451:9:nmea_checksum	24	static
+../Core/Src/main.c:462:6:HAL_UARTEx_RxEventCallback	24	static
+../Core/Src/main.c:473:6:HAL_TIM_PeriodElapsedCallback	16	static
+../Core/Src/main.c:487:6:Error_Handler	8	static,ignoring_inline_asm

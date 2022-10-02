@@ -418,7 +418,8 @@ void send_at_command_2_swarm ( const char* at_command , const char* answer , uin
 
 	sprintf ( swarm_uart_tx_buff , "%s*%02x\n" , at_command , cs ) ;
 	tim14_on = 1 ;
-	//clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
+	//Usunąc poniższe bo nie dziala do końca przez to
+	clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
 	swarm_uart_rx_buff[0] = 0 ;
 	HAL_TIM_Base_Start_IT ( &htim14 ) ;
 	HAL_UART_Transmit ( SWARM_UART_HANDLER , (uint8_t*) swarm_uart_tx_buff ,  strlen ( (char*) swarm_uart_tx_buff ) , SWARM_UART_UART_TX_TIMEOUT ) ;
