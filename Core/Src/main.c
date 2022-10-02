@@ -150,6 +150,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_Delay ( 15000 ) ;
   m138_init () ;
   while (1)
   {
