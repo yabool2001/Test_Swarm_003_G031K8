@@ -21,7 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,6 +33,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define SWARM_UART_HANDLER				&huart1
+#define SWARM_UART_UART_TX_TIMEOUT		100
+#define SWARM_UART_RX_MAX_BUFF_SIZE		250
+#define SWARM_UART_TX_MAX_BUFF_SIZE		250
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -41,11 +47,26 @@
 /* Private variables ---------------------------------------------------------*/
 RTC_HandleTypeDef hrtc;
 
+TIM_HandleTypeDef htim14;
+
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
+char             	swarm_uart_rx_buff[SWARM_UART_RX_MAX_BUFF_SIZE] ;
+char             	swarm_uart_tx_buff[SWARM_UART_TX_MAX_BUFF_SIZE] ;
+uint8_t				tim14_on ;
+uint8_t				swarm_checklist ;
+uint32_t			swarm_dev_id = 0 ;
 
+// SWARM AT Commands
+const char*			cs_at					= "$CS" ;
+const char*			rt_0_at					= "$RT 0" ;
+const char*			rt_q_rate_at			= "$RT ?" ;
+// SWARM AT Answers
+const char*         cs_answer				= "$CS DI=0x" ;
+const char*         rt_ok_answer			= "$RT OK*22" ;
+const char*         rt_0_answer				= "$RT 0*16" ;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -54,8 +75,12 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_RTC_Init(void);
+static void MX_TIM14_Init(void);
 /* USER CODE BEGIN PFP */
-
+void			m138_init () ;
+void			send_at_command_2_swarm ( const char* , const char* , uint16_t ) ;
+void			clean_array ( char* , uint16_t ) ;
+uint8_t			nmea_checksum ( const char* , size_t ) ;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -94,17 +119,22 @@ int main(void)
   MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_RTC_Init();
+  MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
-
+  __HAL_TIM_CLEAR_IT ( &htim14 , TIM_IT_UPDATE ) ;
+  HAL_UARTEx_ReceiveToIdle_DMA ( SWARM_UART_HANDLER , (uint8_t*) swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
+  __HAL_DMA_DISABLE_IT ( &hdma_usart1_rx, DMA_IT_HT ) ; //Disable Half Transfer interrupt.
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  m138_init () ;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  //HAL_PWREx_EnterSHUTDOWNMode () ;
   }
   /* USER CODE END 3 */
 }
@@ -191,6 +221,37 @@ static void MX_RTC_Init(void)
   /* USER CODE BEGIN RTC_Init 2 */
 
   /* USER CODE END RTC_Init 2 */
+
+}
+
+/**
+  * @brief TIM14 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM14_Init(void)
+{
+
+  /* USER CODE BEGIN TIM14_Init 0 */
+
+  /* USER CODE END TIM14_Init 0 */
+
+  /* USER CODE BEGIN TIM14_Init 1 */
+
+  /* USER CODE END TIM14_Init 1 */
+  htim14.Instance = TIM14;
+  htim14.Init.Prescaler = 16000-1;
+  htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim14.Init.Period = 2000-1;
+  htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM14_Init 2 */
+
+  /* USER CODE END TIM14_Init 2 */
 
 }
 
@@ -291,7 +352,73 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void m138_init ()
+{
+	char* chunk = malloc ( 20 * sizeof (char) ) ;
+	send_at_command_2_swarm ( cs_at , cs_answer , 1 ) ;
+	if ( swarm_checklist == 1 )
+	{
+		chunk = strtok ( (char*) swarm_uart_rx_buff , "=" ) ;
+		chunk = strtok ( NULL , "," ) ;
+		swarm_dev_id = (uint32_t) strtol ( chunk , NULL , 16 ) ;
+	}
+	free ( chunk ) ;
+}
 
+void send_at_command_2_swarm ( const char* at_command , const char* answer , uint16_t step )
+{
+	uint8_t cs = nmea_checksum ( at_command , strlen ( at_command ) ) ;
+
+	sprintf ( swarm_uart_tx_buff , "%s*%02x\n" , at_command , cs ) ;
+	tim14_on = 1 ;
+	HAL_TIM_Base_Start_IT ( &htim14 ) ;
+	HAL_UART_Transmit ( SWARM_UART_HANDLER , (uint8_t*) swarm_uart_tx_buff ,  strlen ( (char*) swarm_uart_tx_buff ) , SWARM_UART_UART_TX_TIMEOUT ) ;
+	while ( tim14_on )
+		if ( strncmp ( (char*) swarm_uart_rx_buff , answer , strlen ( answer ) ) == 0 )
+		{
+			swarm_checklist = step ;
+			break ;
+		}
+	clean_array ( swarm_uart_tx_buff , SWARM_UART_TX_MAX_BUFF_SIZE ) ;
+}
+
+void clean_array ( char* array , uint16_t array_max_size )
+{
+	uint16_t i ;
+	for ( i = 0 ; i < array_max_size ; i++ )
+		array[i] = 0 ;
+}
+
+uint8_t nmea_checksum ( const char *message , size_t len )
+{
+	size_t i = 0 ;
+	uint8_t cs ;
+	if ( message [0] == '$' )
+		i++ ;
+	for ( cs = 0 ; ( i < len ) && message [i] ; i++ )
+		cs ^= ( (uint8_t) message [i] ) ;
+	return cs;
+}
+
+void HAL_UARTEx_RxEventCallback ( UART_HandleTypeDef *huart , uint16_t Size )
+{
+	const char* z = 0 ;
+    if ( huart->Instance == USART1 )
+    {
+    	if ( swarm_uart_rx_buff[0] != 0 ) // to avoid doublet because of 2 INTs
+    		strcat ( (char *) swarm_uart_rx_buff , z ) ; // to avoid debris after '\n' of original message
+    	HAL_UARTEx_ReceiveToIdle_DMA ( SWARM_UART_HANDLER , (uint8_t *) swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
+		__HAL_DMA_DISABLE_IT ( &hdma_usart1_rx, DMA_IT_HT ) ; //Disable Half Transfer interrupt.
+    }
+}
+void HAL_TIM_PeriodElapsedCallback ( TIM_HandleTypeDef *htim )
+{
+	if ( htim->Instance == TIM14 )
+	{
+		tim14_on = 0 ;
+		HAL_TIM_Base_Stop_IT ( &htim14 ) ;
+	}
+}
 /* USER CODE END 4 */
 
 /**
