@@ -35,7 +35,7 @@
 /* USER CODE BEGIN PD */
 #define SWARM_UART_HANDLER				&huart1
 #define SWARM_UART_UART_TX_TIMEOUT		100
-#define SWARM_UART_RX_MAX_BUFF_SIZE		250
+#define SWARM_UART_RX_MAX_BUFF_SIZE		100
 #define SWARM_UART_TX_MAX_BUFF_SIZE		250
 /* USER CODE END PD */
 
@@ -56,17 +56,39 @@ DMA_HandleTypeDef hdma_usart1_rx;
 char             	swarm_uart_rx_buff[SWARM_UART_RX_MAX_BUFF_SIZE] ;
 char             	swarm_uart_tx_buff[SWARM_UART_TX_MAX_BUFF_SIZE] ;
 uint8_t				tim14_on ;
-uint8_t				swarm_checklist ;
+uint8_t				swarm_checklist = 0 ;
 uint32_t			swarm_dev_id = 0 ;
 
 // SWARM AT Commands
 const char*			cs_at					= "$CS" ;
 const char*			rt_0_at					= "$RT 0" ;
 const char*			rt_q_rate_at			= "$RT ?" ;
+const char*			pw_0_at					= "$PW 0\0" ;
+const char*			pw_q_rate_at			= "$PW ?\0" ;
+const char*			pw_mostrecent_at		= "$PW @\0" ;
+const char*			dt_0_at					= "$DT 0\0" ;
+const char*			dt_q_rate_at			= "$DT ?\0" ;
+const char*			gs_0_at					= "$GS 0\0" ;
+const char*			gs_q_rate_at			= "$GS ?\0" ;
+const char*			gj_0_at					= "$GJ 0\0" ;
+const char*			gj_q_rate_at			= "$GJ ?\0" ;
+const char*			gn_0_at					= "$GN 0\0" ;
+const char*			gn_q_rate_at			= "$GN ?\0" ;
 // SWARM AT Answers
 const char*         cs_answer				= "$CS DI=0x" ;
 const char*         rt_ok_answer			= "$RT OK*22" ;
 const char*         rt_0_answer				= "$RT 0*16" ;
+const char*         pw_ok_answer			= "$PW OK*23\0" ;
+const char*         pw_0_answer				= "$PW 0*17\0" ;
+const char*         pw_mostrecent_answer	= "$PW \0" ;
+const char*         dt_ok_answer			= "$DT OK*34\0" ;
+const char*         dt_0_answer				= "$DT 0*00\0" ;
+const char*         gs_ok_answer			= "$GS OK*30\0" ;
+const char*         gs_0_answer				= "$GS 0*04\0" ;
+const char*         gj_ok_answer			= "$GJ OK*29\0" ;
+const char*         gj_0_answer				= "$GJ 0*1d\0" ;
+const char*         gn_ok_answer			= "$GN OK*2d\0" ;
+const char*         gn_0_answer				= "$GN 0*19\0" ;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -361,7 +383,31 @@ void m138_init ()
 		chunk = strtok ( (char*) swarm_uart_rx_buff , "=" ) ;
 		chunk = strtok ( NULL , "," ) ;
 		swarm_dev_id = (uint32_t) strtol ( chunk , NULL , 16 ) ;
+		clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
+		send_at_command_2_swarm ( rt_0_at , rt_ok_answer , 2 ) ;
 	}
+	if ( swarm_checklist == 2 )
+		send_at_command_2_swarm ( rt_q_rate_at , rt_0_answer , 3 ) ;
+	if ( swarm_checklist == 3 )
+		send_at_command_2_swarm ( pw_0_at , pw_ok_answer , 4 ) ;
+	if ( swarm_checklist == 4 )
+		send_at_command_2_swarm ( pw_q_rate_at , pw_0_answer , 5 ) ;
+	if ( swarm_checklist == 5 )
+		send_at_command_2_swarm ( dt_0_at , dt_ok_answer , 6 ) ;
+	if ( swarm_checklist == 6 )
+		send_at_command_2_swarm ( dt_q_rate_at , dt_ok_answer , 7 ) ;
+	if ( swarm_checklist == 7 )
+		send_at_command_2_swarm ( gs_0_at , gs_ok_answer  , 8 ) ;
+	if ( swarm_checklist == 8 )
+		send_at_command_2_swarm ( gs_q_rate_at , gs_0_answer , 9 ) ;
+	if ( swarm_checklist == 9 )
+		send_at_command_2_swarm ( gj_0_at , gj_ok_answer  , 10 ) ;
+	if ( swarm_checklist == 10 )
+		send_at_command_2_swarm ( gj_q_rate_at , gj_0_answer , 11 ) ;
+	if ( swarm_checklist == 11 )
+		send_at_command_2_swarm ( gn_0_at , gn_ok_answer  , 12 ) ;
+	if ( swarm_checklist == 12 )
+		send_at_command_2_swarm ( gn_q_rate_at , gn_0_answer , 13 ) ;
 	free ( chunk ) ;
 }
 
@@ -371,6 +417,7 @@ void send_at_command_2_swarm ( const char* at_command , const char* answer , uin
 
 	sprintf ( swarm_uart_tx_buff , "%s*%02x\n" , at_command , cs ) ;
 	tim14_on = 1 ;
+	//clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
 	HAL_TIM_Base_Start_IT ( &htim14 ) ;
 	HAL_UART_Transmit ( SWARM_UART_HANDLER , (uint8_t*) swarm_uart_tx_buff ,  strlen ( (char*) swarm_uart_tx_buff ) , SWARM_UART_UART_TX_TIMEOUT ) ;
 	while ( tim14_on )
