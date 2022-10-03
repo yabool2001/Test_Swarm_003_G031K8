@@ -57,7 +57,8 @@ char             	swarm_answer_buff[SWARM_ANSWER_MAX_BUFF_SIZE] ;
 char             	swarm_uart_tx_buff[SWARM_UART_TX_MAX_BUFF_SIZE] ;
 uint8_t				tim14_on ;
 uint8_t				swarm_checklist = 0 ;
-uint32_t			swarm_dev_id = 0 ;
+uint32_t			m138_dev_id = 0 ;
+float				swarm_voltage = 0 ;
 uint8_t				answer_from_swarm = 0 ;
 
 // SWARM AT Commands
@@ -101,6 +102,7 @@ static void MX_TIM14_Init(void);
 /* USER CODE BEGIN PFP */
 void			m138_init () ;
 float 			m138_get_voltage () ;
+uint8_t 		store_m138_dev_id ( uint32_t* , char* ) ;
 void			send_at_command_2_swarm ( const char* , const char* , uint16_t ) ;
 void			clean_array ( char* , uint16_t ) ;
 uint8_t			nmea_checksum ( const char* , size_t ) ;
@@ -152,7 +154,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   //HAL_Delay ( 15000 ) ;
   m138_init () ;
-  float v = m138_get_voltage () ;
+  swarm_voltage = m138_get_voltage () ;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -347,17 +349,25 @@ float m138_get_voltage ()
 	return m138_voltage ;
 }
 
+uint8_t store_m138_dev_id ( uint32_t* dev_id , char* string )
+{
+	if ( ! strstr ( string , "DI=" ) )
+		return 0 ;
+	char* chunk = malloc ( 500 * sizeof (char) ) ;
+	chunk = strtok ( (char*) string , "=" ) ;
+	chunk = strtok ( NULL , "," ) ;
+	*dev_id = (uint32_t) strtol ( chunk , NULL , 16 ) ;
+	free ( chunk ) ;
+	return 1 ;
+	//clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
+}
+
 void m138_init ()
 {
 	send_at_command_2_swarm ( cs_at , cs_answer , 1 ) ;
 	if ( swarm_checklist == 1 )
 	{
-		char* chunk = malloc ( 20 * sizeof (char) ) ;
-		chunk = strtok ( (char*) swarm_answer_buff , "=" ) ;
-		chunk = strtok ( NULL , "," ) ;
-		swarm_dev_id = (uint32_t) strtol ( chunk , NULL , 16 ) ;
-		//free ( chunk ) ;
-		//clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
+		store_m138_dev_id ( &m138_dev_id , swarm_answer_buff ) ;
 		send_at_command_2_swarm ( rt_0_at , rt_ok_answer , 2 ) ;
 	}
 	if ( swarm_checklist == 2 )
