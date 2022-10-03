@@ -46,6 +46,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+RTC_HandleTypeDef hrtc;
+
 TIM_HandleTypeDef htim14;
 
 UART_HandleTypeDef huart1;
@@ -58,7 +60,7 @@ char             	swarm_uart_tx_buff[SWARM_UART_TX_MAX_BUFF_SIZE] ;
 uint8_t				tim14_on ;
 uint8_t				swarm_checklist = 0 ;
 uint32_t			m138_dev_id = 0 ;
-float				swarm_voltage = 0 ;
+float				m138_voltage = 0 ;
 uint8_t				answer_from_swarm = 0 ;
 
 // SWARM AT Commands
@@ -99,10 +101,12 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM14_Init(void);
+static void MX_RTC_Init(void);
 /* USER CODE BEGIN PFP */
 void			m138_init () ;
 float 			m138_get_voltage () ;
 uint8_t 		store_m138_dev_id ( uint32_t* , char* ) ;
+uint8_t 		store_m138_voltage ( float* , char* ) ;
 void			send_at_command_2_swarm ( const char* , const char* , uint16_t ) ;
 void			clean_array ( char* , uint16_t ) ;
 uint8_t			nmea_checksum ( const char* , size_t ) ;
@@ -144,6 +148,7 @@ int main(void)
   MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_TIM14_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   __HAL_TIM_CLEAR_IT ( &htim14 , TIM_IT_UPDATE ) ;
   //HAL_UARTEx_ReceiveToIdle_DMA ( SWARM_UART_HANDLER , (uint8_t*) swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
@@ -154,9 +159,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   //HAL_Delay ( 15000 ) ;
   m138_init () ;
-  swarm_voltage = m138_get_voltage () ;
+
   while (1)
   {
+	  HAL_Delay ( 2000 ) ;
+	  send_at_command_2_swarm ( pw_mostrecent_at , pw_mostrecent_answer , 14 ) ;
+	  if ( swarm_checklist == 14 )
+		  store_m138_voltage ( &m138_voltage , swarm_answer_buff ) ;
+	  HAL_PWR_EnterSTOPMode ( PWR_LOWPOWERREGULATOR_ON , PWR_STOPENTRY_WFI ) ;
+	  //HAL_PWR_EnterSLEEPMode ( PWR_MAINREGULATOR_ON , PWR_SLEEPENTRY_WFI ) ;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -178,10 +189,16 @@ void SystemClock_Config(void)
   */
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
 
+  /** Configure LSE Drive Capability
+  */
+  HAL_PWR_EnableBkUpAccess();
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -203,6 +220,50 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+
+  /** Initialize RTC Only
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  hrtc.Init.OutPutPullUp = RTC_OUTPUT_PULLUP_NONE;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Enable the WakeUp
+  */
+  if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 60, RTC_WAKEUPCLOCK_CK_SPRE_16BITS) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
+
 }
 
 /**
@@ -333,31 +394,25 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-float m138_get_voltage ()
+
+uint8_t store_m138_voltage ( float* v , char* s )
 {
-	float m138_voltage = 0.0 ;
-	char* chunk = malloc ( 30 * sizeof (char) ) ;
-	send_at_command_2_swarm ( pw_mostrecent_at , pw_mostrecent_answer , 14 ) ;
-	if ( swarm_checklist == 14 )
-	{
-		chunk = strtok ( (char*) swarm_uart_rx_buff , " " ) ;
-		chunk = strtok ( NULL , "," ) ;
-		m138_voltage = (float) strtof ( chunk , NULL ) ;
-	}
-	free ( chunk ) ;
+	if ( ! strstr ( s , "$PW " ) )
+		return 0 ;
+	s = strtok ( (char*) s , " " ) ;
+	s = strtok ( NULL , "," ) ;
+	*v = (float) strtof ( s , NULL ) ;
+	return 1 ;
 	//clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
-	return m138_voltage ;
 }
 
-uint8_t store_m138_dev_id ( uint32_t* dev_id , char* string )
+uint8_t store_m138_dev_id ( uint32_t* dev_id , char* s )
 {
-	if ( ! strstr ( string , "DI=" ) )
+	if ( ! strstr ( s , "DI=0x" ) )
 		return 0 ;
-	char* chunk = malloc ( 500 * sizeof (char) ) ;
-	chunk = strtok ( (char*) string , "=" ) ;
-	chunk = strtok ( NULL , "," ) ;
-	*dev_id = (uint32_t) strtol ( chunk , NULL , 16 ) ;
-	free ( chunk ) ;
+	s = strtok ( (char*) s , "=" ) ;
+	s = strtok ( NULL , "," ) ;
+	*dev_id = (uint32_t) strtol ( s , NULL , 16 ) ;
 	return 1 ;
 	//clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
 }
