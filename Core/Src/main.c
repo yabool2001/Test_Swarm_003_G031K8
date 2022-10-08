@@ -34,10 +34,11 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define SWARM_UART_HANDLER				&huart1
-#define SWARM_UART_UART_TX_TIMEOUT		100
+#define SWARM_UART_TX_TIMEOUT			100
 #define SWARM_UART_RX_MAX_BUFF_SIZE		100
 #define SWARM_ANSWER_MAX_BUFF_SIZE		100
 #define SWARM_UART_TX_MAX_BUFF_SIZE		250
+#define SWARM_TD_PAYLOAD_MAX_BUFF_SIZE	192
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -55,44 +56,50 @@ DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
 char             	swarm_uart_rx_buff[SWARM_UART_RX_MAX_BUFF_SIZE] ;
-char             	swarm_answer_buff[SWARM_ANSWER_MAX_BUFF_SIZE] ;
 char             	swarm_uart_tx_buff[SWARM_UART_TX_MAX_BUFF_SIZE] ;
 uint8_t				tim14_on ;
 uint8_t				swarm_checklist = 0 ;
 uint32_t			m138_dev_id = 0 ;
+//unsigned int		m138_dev_id = 0 ;
 float				m138_voltage = 0 ;
-uint8_t				answer_from_swarm = 0 ;
+char				m138_fix[50] ;
+uint8_t				answer_from_swarm_come = 0 ;
 
 // SWARM AT Commands
 const char*			cs_at					= "$CS" ;
 const char*			rt_0_at					= "$RT 0" ;
 const char*			rt_q_rate_at			= "$RT ?" ;
-const char*			pw_0_at					= "$PW 0\0" ;
-const char*			pw_q_rate_at			= "$PW ?\0" ;
-const char*			pw_mostrecent_at		= "$PW @\0" ;
-const char*			dt_0_at					= "$DT 0\0" ;
-const char*			dt_q_rate_at			= "$DT ?\0" ;
-const char*			gs_0_at					= "$GS 0\0" ;
-const char*			gs_q_rate_at			= "$GS ?\0" ;
-const char*			gj_0_at					= "$GJ 0\0" ;
-const char*			gj_q_rate_at			= "$GJ ?\0" ;
-const char*			gn_0_at					= "$GN 0\0" ;
-const char*			gn_q_rate_at			= "$GN ?\0" ;
+const char*			pw_0_at					= "$PW 0" ;
+const char*			pw_q_rate_at			= "$PW ?" ;
+const char*			pw_mostrecent_at		= "$PW @" ;
+const char*			dt_0_at					= "$DT 0" ;
+const char*			dt_q_rate_at			= "$DT ?" ;
+const char*			gs_0_at					= "$GS 0" ;
+const char*			gs_q_rate_at			= "$GS ?" ;
+const char*			gj_0_at					= "$GJ 0" ;
+const char*			gj_q_rate_at			= "$GJ ?" ;
+const char*			gn_0_at					= "$GN 0" ;
+const char*			gn_q_rate_at			= "$GN ?" ;
+const char*			gn_mostrecent_at		= "$GN @" ;
+const char*			sl_60s_at_comm			= "$SL S=60" ;
 // SWARM AT Answers
 const char*         cs_answer				= "$CS DI=0x" ;
 const char*         rt_ok_answer			= "$RT OK*22" ;
 const char*         rt_0_answer				= "$RT 0*16" ;
-const char*         pw_ok_answer			= "$PW OK*23\0" ;
-const char*         pw_0_answer				= "$PW 0*17\0" ;
-const char*         pw_mostrecent_answer	= "$PW \0" ;
-const char*         dt_ok_answer			= "$DT OK*34\0" ;
-const char*         dt_0_answer				= "$DT 0*00\0" ;
-const char*         gs_ok_answer			= "$GS OK*30\0" ;
-const char*         gs_0_answer				= "$GS 0*04\0" ;
-const char*         gj_ok_answer			= "$GJ OK*29\0" ;
-const char*         gj_0_answer				= "$GJ 0*1d\0" ;
-const char*         gn_ok_answer			= "$GN OK*2d\0" ;
-const char*         gn_0_answer				= "$GN 0*19\0" ;
+const char*         pw_ok_answer			= "$PW OK*23" ;
+const char*         pw_0_answer				= "$PW 0*17" ;
+const char*         pw_mostrecent_answer	= "$PW " ;
+const char*         dt_ok_answer			= "$DT OK*34" ;
+const char*         dt_0_answer				= "$DT 0*00" ;
+const char*         gs_ok_answer			= "$GS OK*30" ;
+const char*         gs_0_answer				= "$GS 0*04" ;
+const char*         gj_ok_answer			= "$GJ OK*29" ;
+const char*         gj_0_answer				= "$GJ 0*1d" ;
+const char*         gn_ok_answer			= "$GN OK*2d" ;
+const char*         gn_0_answer				= "$GN 0*19" ;
+const char*         gn_mostrecent_answer	= "$GN " ;
+const char*			td_ok_answer			= "$TD OK," ;
+const char*         sl_ok_answer			= "$SL OK*3b\0" ;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -103,13 +110,16 @@ static void MX_USART1_UART_Init(void);
 static void MX_TIM14_Init(void);
 static void MX_RTC_Init(void);
 /* USER CODE BEGIN PFP */
-void			m138_init () ;
-float 			m138_get_voltage () ;
-uint8_t 		store_m138_dev_id ( uint32_t* , char* ) ;
-uint8_t 		store_m138_voltage ( float* , char* ) ;
-void			send_at_command_2_swarm ( const char* , const char* , uint16_t ) ;
-void			clean_array ( char* , uint16_t ) ;
-uint8_t			nmea_checksum ( const char* , size_t ) ;
+void				m138_init 				() ;
+uint8_t 			store_m138_dev_id 		( uint32_t* , char* ) ;
+uint8_t 			store_m138_voltage 		( float* , char* ) ;
+uint8_t 			store_m138_fix 			( char* , char* ) ;
+uint8_t 			send_m138_message		() ;
+HAL_StatusTypeDef 	send_string_2_uart 		( char* ) ;
+uint8_t				uart_comm 				( const char* , const char* , uint16_t ) ;
+void				receive_dma_uart 		() ;
+void				clean_array 			( char* , uint16_t ) ;
+uint8_t				nmea_checksum 			( const char* , size_t ) ;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -157,16 +167,35 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  //HAL_Delay ( 15000 ) ;
+  HAL_Delay ( 1800 ) ;
   m138_init () ;
 
   while (1)
   {
-	  HAL_Delay ( 2000 ) ;
-	  send_at_command_2_swarm ( pw_mostrecent_at , pw_mostrecent_answer , 14 ) ;
+	  uart_comm ( pw_mostrecent_at , pw_mostrecent_answer , 14 ) ;
 	  if ( swarm_checklist == 14 )
-		  store_m138_voltage ( &m138_voltage , swarm_answer_buff ) ;
-	  HAL_PWR_EnterSTOPMode ( PWR_LOWPOWERREGULATOR_ON , PWR_STOPENTRY_WFI ) ;
+	  {
+		  store_m138_voltage ( &m138_voltage , swarm_uart_rx_buff ) ;
+		  uart_comm ( gn_mostrecent_at , gn_mostrecent_answer , 15 ) ;
+		  if ( swarm_checklist == 15 )
+		  {
+			  store_m138_fix ( m138_fix , swarm_uart_rx_buff ) ;
+		  	  uart_comm ( gn_mostrecent_at , gn_mostrecent_answer , 16 ) ;
+		  }
+		  if ( swarm_checklist == 16 )
+		  {
+			  send_m138_message () ;
+			  /*
+			  HAL_Delay ( 60000 ) ;
+			  if ( swarm_checklist == 17 )
+			  {
+				  uart_comm ( sl_60s_at_comm , sl_ok_answer , 18 ) ;
+			  }
+			  */
+		  }
+	  }
+	  HAL_Delay ( 3000 ) ;
+	  //HAL_PWR_EnterSTOPMode ( PWR_LOWPOWERREGULATOR_ON , PWR_STOPENTRY_WFI ) ;
 	  //HAL_PWR_EnterSLEEPMode ( PWR_MAINREGULATOR_ON , PWR_SLEEPENTRY_WFI ) ;
     /* USER CODE END WHILE */
 
@@ -394,14 +423,34 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+uint8_t send_m138_message ()
+{
+	snprintf ( swarm_uart_tx_buff , SWARM_TD_PAYLOAD_MAX_BUFF_SIZE , "$TD HD=60,\"%u;%f;%s\"" , (unsigned int) m138_dev_id , m138_voltage , m138_fix ) ;
+	uart_comm ( swarm_uart_tx_buff , td_ok_answer , 17 ) ;
+	if ( swarm_checklist == 17 )
+		return 1 ;
+	else
+		return 0 ;
+}
+uint8_t store_m138_fix ( char* d , char* s )
+{
+	if ( ! strstr ( s , "$GN " ) )
+		return 0 ;
+	s = strtok ( (char*) s , " " ) ;
+	s = strtok ( NULL , "*" ) ;
+	size_t l =  strlen ( s ) ;
+	memcpy ( d , s , l ) ;
+	d[l] = '\0' ;
+	return 1 ;
+}
 
-uint8_t store_m138_voltage ( float* v , char* s )
+uint8_t store_m138_voltage ( float* d , char* s )
 {
 	if ( ! strstr ( s , "$PW " ) )
 		return 0 ;
 	s = strtok ( (char*) s , " " ) ;
 	s = strtok ( NULL , "," ) ;
-	*v = (float) strtof ( s , NULL ) ;
+	*d = (float) strtof ( s , NULL ) ;
 	return 1 ;
 	//clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
 }
@@ -419,67 +468,66 @@ uint8_t store_m138_dev_id ( uint32_t* dev_id , char* s )
 
 void m138_init ()
 {
-	send_at_command_2_swarm ( cs_at , cs_answer , 1 ) ;
+	uart_comm ( cs_at , cs_answer , 1 ) ;
 	if ( swarm_checklist == 1 )
 	{
-		store_m138_dev_id ( &m138_dev_id , swarm_answer_buff ) ;
-		send_at_command_2_swarm ( rt_0_at , rt_ok_answer , 2 ) ;
+		store_m138_dev_id ( &m138_dev_id , swarm_uart_rx_buff ) ;
+		uart_comm ( rt_0_at , rt_ok_answer , 2 ) ;
 	}
 	if ( swarm_checklist == 2 )
-		send_at_command_2_swarm ( rt_q_rate_at , rt_0_answer , 3 ) ;
+		uart_comm ( rt_q_rate_at , rt_0_answer , 3 ) ;
 	if ( swarm_checklist == 3 )
-		send_at_command_2_swarm ( pw_0_at , pw_ok_answer , 4 ) ;
+		uart_comm ( pw_0_at , pw_ok_answer , 4 ) ;
 	if ( swarm_checklist == 4 )
-		send_at_command_2_swarm ( pw_q_rate_at , pw_0_answer , 5 ) ;
+		uart_comm ( pw_q_rate_at , pw_0_answer , 5 ) ;
 	if ( swarm_checklist == 5 )
-		send_at_command_2_swarm ( dt_0_at , dt_ok_answer , 6 ) ;
+		uart_comm ( dt_0_at , dt_ok_answer , 6 ) ;
 	if ( swarm_checklist == 6 )
-		send_at_command_2_swarm ( dt_q_rate_at , dt_0_answer , 7 ) ;
+		uart_comm ( dt_q_rate_at , dt_0_answer , 7 ) ;
 	if ( swarm_checklist == 7 )
-		send_at_command_2_swarm ( gs_0_at , gs_ok_answer  , 8 ) ;
+		uart_comm ( gs_0_at , gs_ok_answer  , 8 ) ;
 	if ( swarm_checklist == 8 )
-		send_at_command_2_swarm ( gs_q_rate_at , gs_0_answer , 9 ) ;
+		uart_comm ( gs_q_rate_at , gs_0_answer , 9 ) ;
 	if ( swarm_checklist == 9 )
-		send_at_command_2_swarm ( gj_0_at , gj_ok_answer  , 10 ) ;
+		uart_comm ( gj_0_at , gj_ok_answer  , 10 ) ;
 	if ( swarm_checklist == 10 )
-		send_at_command_2_swarm ( gj_q_rate_at , gj_0_answer , 11 ) ;
+		uart_comm ( gj_q_rate_at , gj_0_answer , 11 ) ;
 	if ( swarm_checklist == 11 )
-		send_at_command_2_swarm ( gn_0_at , gn_ok_answer  , 12 ) ;
+		uart_comm ( gn_0_at , gn_ok_answer  , 12 ) ;
 	if ( swarm_checklist == 12 )
-		send_at_command_2_swarm ( gn_q_rate_at , gn_0_answer , 13 ) ;
-	//clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
+		uart_comm ( gn_q_rate_at , gn_0_answer , 13 ) ;
 }
 
-void send_at_command_2_swarm ( const char* at_command , const char* answer , uint16_t step )
+uint8_t uart_comm ( const char* at_command , const char* answer , uint16_t step )
 {
 	uint8_t t ;
 	uint8_t cs = nmea_checksum ( at_command , strlen ( at_command ) ) ;
 	sprintf ( swarm_uart_tx_buff , "%s*%02x\n" , at_command , cs ) ;
-
+	receive_dma_uart () ;
 	for ( t = 0 ; t < 5 ; t++ )
 	{
 		tim14_on = 1 ;
 		HAL_TIM_Base_Start_IT ( &htim14 ) ;
 		//Usunąc poniższe bo nie dziala do końca przez to
-		answer_from_swarm = 0 ;
-		//clean_array ( swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
-		//clean_array ( swarm_answer_buff , SWARM_ANSWER_MAX_BUFF_SIZE ) ;
-		HAL_UARTEx_ReceiveToIdle_DMA ( SWARM_UART_HANDLER , (uint8_t*) swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
-		__HAL_DMA_DISABLE_IT ( &hdma_usart1_rx, DMA_IT_HT ) ; //Disable Half Transfer interrupt.
-		HAL_UART_Transmit ( SWARM_UART_HANDLER , (uint8_t*) swarm_uart_tx_buff ,  strlen ( swarm_uart_tx_buff ) , SWARM_UART_UART_TX_TIMEOUT ) ;
+		answer_from_swarm_come = 0 ;
+		send_string_2_uart ( swarm_uart_tx_buff ) ;
 		while ( tim14_on )
 		{
-			if ( answer_from_swarm == 1 )
+			if ( answer_from_swarm_come == 1 )
 			{
-				if ( strncmp ( swarm_answer_buff , answer , strlen ( answer ) ) == 0 )
+				if ( strncmp ( swarm_uart_rx_buff , answer , strlen ( answer ) ) == 0 )
 					swarm_checklist = step ;
 				break ;
+				receive_dma_uart () ;
 			}
 		}
 		if ( swarm_checklist == step )
 			break ;
 	}
-	//clean_array ( swarm_answer_buff , SWARM_ANSWER_MAX_BUFF_SIZE ) ;
+	if ( swarm_checklist == step )
+		return 1 ;
+	else
+		return 0 ;
 }
 
 void clean_array ( char* array , uint16_t array_max_size )
@@ -487,6 +535,17 @@ void clean_array ( char* array , uint16_t array_max_size )
 	uint16_t i ;
 	for ( i = 0 ; i < array_max_size ; i++ )
 		array[i] = 0 ;
+}
+
+HAL_StatusTypeDef send_string_2_uart ( char* s )
+{
+	return HAL_UART_Transmit ( SWARM_UART_HANDLER , (uint8_t *) s , strlen ( s ) , SWARM_UART_TX_TIMEOUT ) ;
+}
+
+void receive_dma_uart ()
+{
+	HAL_UARTEx_ReceiveToIdle_DMA ( SWARM_UART_HANDLER , (uint8_t*) swarm_uart_rx_buff , SWARM_UART_RX_MAX_BUFF_SIZE ) ;
+	__HAL_DMA_DISABLE_IT ( &hdma_usart1_rx, DMA_IT_HT ) ; //Disable Half Transfer interrupt.
 }
 
 uint8_t nmea_checksum ( const char *message , size_t len )
@@ -504,9 +563,8 @@ void HAL_UARTEx_RxEventCallback ( UART_HandleTypeDef *huart , uint16_t Size )
 {
     if ( huart->Instance == USART1 )
     {
-    	memcpy ( swarm_answer_buff , swarm_uart_rx_buff , Size ) ;
     	swarm_uart_rx_buff[Size] = '\0' ;
-    	answer_from_swarm = 1 ;
+    	answer_from_swarm_come = 1 ;
     }
 }
 void HAL_TIM_PeriodElapsedCallback ( TIM_HandleTypeDef *htim )
