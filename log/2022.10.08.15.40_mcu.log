@@ -1,0 +1,126 @@
+
+[2022-10-08 15:40:42.607] Hello! Test_Swarm_004_L432KC started
+[2022-10-08 15:40:44.584] Hello! Test_Swarm_004_L432KC started
+[2022-10-08 15:40:45.531] m138_init_status_reg = 127
+[2022-10-08 15:40:45.547] $TD HD=60,"13361;0.0000,0.0000,0,0,0"
+[2022-10-08 15:40:45.547] Swarm went sleep for 10s.
+[2022-10-08 15:40:45.547] SMT32 opened uart_dma and will stop0.
+[2022-10-08 15:46:00.452] Hello! Test_Swarm_004_L432KC started
+[2022-10-08 15:46:02.256] Hello! Test_Swarm_004_L432KC started
+[2022-10-08 15:46:03.108] m138_init_status_reg = 127
+[2022-10-08 15:46:03.124] $TD HD=60,"13361;52.2781,20.8091,64,198,2"
+[2022-10-08 15:46:03.124] Swarm went sleep for 10s.
+[2022-10-08 15:46:13.143] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.143] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.143] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.158] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.158] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.158] $PW  not received.
+[2022-10-08 15:46:13.158] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.158] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.174] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.174] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.174] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.174] $GN  not received.
+[2022-10-08 15:46:13.189] $TD HD=60,"13361;52.2781,20.8091,64,198,2"
+[2022-10-08 15:46:13.189] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.189] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.189] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.205] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.205] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:13.205] $SL OK*3b not received.
+[2022-10-08 15:46:23.213] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.213] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.228] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.228] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.228] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.228] $PW  not received.
+[2022-10-08 15:46:23.244] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.244] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.244] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.244] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.260] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.260] $GN  not received.
+[2022-10-08 15:46:23.260] $TD HD=60,"13361;52.2781,20.8091,64,198,2"
+[2022-10-08 15:46:23.260] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.260] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.275] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.275] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.275] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:23.291] $SL OK*3b not received.
+[2022-10-08 15:46:33.292] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.292] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.307] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.307] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.307] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.307] $PW  not received.
+[2022-10-08 15:46:33.307] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.323] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.323] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.323] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.323] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.339] $GN  not received.
+[2022-10-08 15:46:33.339] $TD HD=60,"13361;52.2781,20.8091,64,198,2"
+[2022-10-08 15:46:33.339] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.339] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.354] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.354] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.354] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:33.354] $SL OK*3b not received.
+[2022-10-08 15:46:43.370] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.370] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.370] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.386] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.386] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.386] $PW  not received.
+[2022-10-08 15:46:43.386] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.401] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.401] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.401] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.401] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.417] $GN  not received.
+[2022-10-08 15:46:43.417] $TD HD=60,"13361;52.2781,20.8091,64,198,2"
+[2022-10-08 15:46:43.417] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.417] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.432] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.432] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.432] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:43.432] $SL OK*3b not received.
+[2022-10-08 15:46:53.439] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.455] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.455] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.455] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.455] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.470] $PW  not received.
+[2022-10-08 15:46:53.470] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.470] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.470] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.486] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.486] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.486] $GN  not received.
+[2022-10-08 15:46:53.486] $TD HD=60,"13361;52.2781,20.8091,64,198,2"
+[2022-10-08 15:46:53.502] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.502] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.502] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.502] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.517] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:46:53.517] $SL OK*3b not received.
+[2022-10-08 15:47:03.528] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.534] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.539] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.542] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.546] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.552] $PW  not received.
+[2022-10-08 15:47:03.552] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.556] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.560] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.564] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.567] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.567] $GN  not received.
+[2022-10-08 15:47:03.567] $TD HD=60,"13361;52.2781,20.8091,64,198,2"
+[2022-10-08 15:47:03.567] try no. 0 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.567] try no. 1 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.583] try no. 2 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.583] try no. 3 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.583] try no. 4 receive_swarm_uart_dma () != HAL_OK
+[2022-10-08 15:47:03.583] $SL OK*3b not received.
